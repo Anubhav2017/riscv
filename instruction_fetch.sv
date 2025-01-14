@@ -8,7 +8,7 @@ module instruction_fetch(
 logic [9:0] pc;
 wire [9:0] next_pc;
 
-assign next_pc = pc+4;
+assign next_pc = pc+1;
 
 
 always @(posedge i_clk, negedge i_rstn) begin
