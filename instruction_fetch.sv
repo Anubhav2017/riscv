@@ -1,20 +1,28 @@
 module instruction_fetch(
     input i_clk,
     input i_rstn,
+    input [31:0] new_pc,
+    input update_pc,
 
+
+    output logic [31:0] pc,
     output [31:0] instruction
 );
 
-logic [9:0] pc;
-wire [9:0] next_pc;
+logic [31:0] next_pc;
 
-assign next_pc = pc+1;
+always_comb begin
+    if(update_pc ==1'b1)
+        next_pc = new_pc;
+    else
+        next_pc = pc+1;
+end
 
 
 always @(posedge i_clk, negedge i_rstn) begin
 
     if(!i_rstn)
-        pc <= 10'd0;
+        pc <= 32'd0;
     else
         pc <= next_pc;    
 

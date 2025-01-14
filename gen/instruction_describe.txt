@@ -2,63 +2,7 @@ noop
 noop
 noop
 add 1 2 2 
-add 1 2 2
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2 
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
-add 1 2 2
+jalr 4 8 7
 noop
 noop
 noop
