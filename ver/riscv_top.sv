@@ -6,11 +6,10 @@ module riscv_top(
 );
 
 wire [31:0] instruction;
-logic [31:0] instruction_reg;
+logic [63:0] instruction_reg;
 logic [31:0] pc, new_pc;
 logic update_pc;
 
-wire [31:0] regbank [32];
 
 instruction_fetch u_if(
     .i_clk(i_clk),
@@ -24,9 +23,9 @@ instruction_fetch u_if(
 always @(posedge i_clk, negedge i_rstn) begin
 
     if(!i_rstn)
-        instruction_reg <= 32'd0;
+        instruction_reg <= 64'd0;
     else
-        instruction_reg <= instruction;
+        instruction_reg <= {pc,instruction};
 
 end
 
@@ -53,7 +52,6 @@ instruction_decode u_id(
     .i_clk(i_clk),
     .i_rstn(i_rstn),
     .instruction_reg(instruction_reg),
-    .current_pc(pc),
     .read_addr1(read_addr1), 
     .read_addr2(read_addr2),
     .read_data1(read_data1), 

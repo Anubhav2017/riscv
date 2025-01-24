@@ -15,7 +15,7 @@ always_comb begin
     if(update_pc ==1'b1)
         next_pc = new_pc;
     else
-        next_pc = pc+1;
+        next_pc = pc+4;
 end
 
 
@@ -28,9 +28,11 @@ always @(posedge i_clk, negedge i_rstn) begin
 
 end
 
+logic [31:0] pc_mem_addr;
 
+assign pc_mem_addr = {2'b0,pc>>2};
 imem inst_imem(
-    .addr(pc),
+    .addr(pc_mem_addr),
     .data(instruction)
 );
 

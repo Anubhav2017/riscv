@@ -11,14 +11,33 @@ for line in f2:
     elif((linedata.split(" ")[0] == "lui")):
         contents = linedata.split(" ")
         imm = int(contents[1])
-        imm_u = bin(imm)[2:].zfill(20)
+        if(imm < 0):
+            if(imm < -2**19):
+                imm = -2**19
+            imm_pos = int(imm+ 2**19)
+            imm_u = "1"+bin(imm_pos)[2:].zfill(19)
+        else:
+            if(imm > (2**19-1)):
+                imm = 2**19-1
+            imm_pos = imm
+            imm_u = "0"+bin(imm_pos)[2:].zfill(19)
+
         f1.write(imm_u+bin(int(contents[2]))[2:].zfill(5)+"0110111"+"\n")
     
     elif((linedata.split(" ")[0] == "auipc")):
         contents = linedata.split(" ")
         imm = int(contents[1])
-        imm_u = bin(imm)[2:].zfill(20)
-        f1.write(imm_u+bin(int(contents[2]))[2:].zfill(5)+"0110111"+"\n")
+        if(imm < 0):
+            if(imm < -2**19):
+                imm = -2**19
+            imm_pos = int(imm+ 2**19)
+            imm_u = "1"+bin(imm_pos)[2:].zfill(19)
+        else:
+            if(imm > (2**19-1)):
+                imm = 2**19-1
+            imm_pos = imm
+            imm_u = "0"+bin(imm_pos)[2:].zfill(19)
+        f1.write(imm_u+bin(int(contents[2]))[2:].zfill(5)+"0010111"+"\n")
 
     elif(linedata.split(" ")[0]=="jal"):
         contents = linedata.split(" ")
@@ -30,15 +49,14 @@ for line in f2:
 
         imm_div2 = int(imm/2) #imm is even
         imm_div2_pos = 0
-        imm_b = ''
         if(imm_div2<0):
             imm_div2_pos += imm_div2+524288
-            imm_b = '1'+bin(imm_div2_pos)[2:].zfill(19)+'0'
+            imm_j = '1'+bin(imm_div2_pos)[2:].zfill(19)+'0'
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(19)+'0'
+            imm_j = '0'+bin(imm_div2_pos[2:]).zfill(19)+'0'
 
-        f1.write(imm_b[20]+imm_b[10:1]+imm_b[11]+imm_b[19:12]+bin(int(contents[2]))[2:]+"1101111")
+        f1.write(imm_j[0]+imm_b[10:20]+imm_b[9]+imm_b[1:9]+bin(int(contents[2]))[2:]+"1101111")
 
     elif((linedata.split(" ")[0] == "jalr")): 
         contents = linedata.split(" ")
@@ -48,12 +66,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(int(contents[2]))[2:].zfill(5)+"000"+bin(int(contents[3]))[2:].zfill(5)+"1100111"+"\n")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(int(contents[2]))[2:].zfill(5)+"000"+bin(int(contents[3]))[2:].zfill(5)+"1100111"+"\n")
 
     elif((linedata.split(" ")[0] == "beq")):
         contents = linedata.split(" ")
@@ -65,15 +83,14 @@ for line in f2:
 
         imm_div2 = int(imm/2) #imm is even
         imm_div2_pos = 0
-        imm_b = ''
+        imm_b = ""
         if(imm_div2<0):
             imm_div2_pos += imm_div2+2048
-            imm_b = '1'+bin(imm_div2_pos)[2:].zfill(11)+'0'
+            imm_b = "1"+bin(imm_div2_pos)[2:].zfill(11)+"0"
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
-
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"000"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+            imm_b = "0"+bin(imm_div2_pos)[2:].zfill(11)+"0"
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"000"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
     elif((linedata.split(" ")[0] == "bne")):
         contents = linedata.split(" ")
         imm = (int(contents[1]))
@@ -90,9 +107,9 @@ for line in f2:
             imm_b = '1'+bin(imm_div2_pos)[2:].zfill(11)+'0'
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
+            imm_b = '0'+bin(imm_div2_pos)[2:].zfill(11)+'0'
 
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"001"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"001"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
 
     elif((linedata.split(" ")[0] == "blt")):
         contents = linedata.split(" ")
@@ -111,9 +128,9 @@ for line in f2:
             imm_b = '1'+bin(imm_div2_pos)[2:].zfill(11)+'0'
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
+            imm_b = '0'+bin(imm_div2_pos)[2:].zfill(11)+'0'
 
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"100"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"100"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
         
     elif((linedata.split(" ")[0] == "bge")):
         contents = linedata.split(" ")
@@ -132,9 +149,9 @@ for line in f2:
             imm_b = '1'+bin(imm_div2_pos)[2:].zfill(11)+'0'
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
+            imm_b = '0'+bin(imm_div2_pos)[2:].zfill(11)+'0'
 
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"101"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"101"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
         
         
     elif((linedata.split(" ")[0] == "bltu")):
@@ -154,12 +171,11 @@ for line in f2:
             imm_b = '1'+bin(imm_div2_pos)[2:].zfill(11)+'0'
         else:
             imm_div2_pos = imm_div2
-            imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
+            imm_b = '0'+bin(imm_div2_pos)[2:].zfill(11)+'0'
 
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"110"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"110"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
         
         
-        f1.write(bin(int(contents[1]))[2:].zfill(7)+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"11000000"+"1100011"+"\n")
     elif((linedata.split(" ")[0] == "bgeu")):
         contents = linedata.split(" ")
         
@@ -179,7 +195,7 @@ for line in f2:
             imm_div2_pos = imm_div2
             imm_b = '0'+bin(imm_div2_pos[2:]).zfill(11)+'0'
 
-        f1.write(imm_b[12]+imm_b[10:5]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"111"+imm_b[4:1]+imm_b[11]+"1100011"+"\n")
+        f1.write(imm_b[0]+imm_b[2:8]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"111"+imm_b[8:12]+imm_b[1]+"1100011"+"\n")
 
     elif((linedata.split(" ")[0] == "lb")):
         contents = linedata.split(" ")
@@ -189,13 +205,13 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
 
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"000"+bin(contents[3])[2:].zfill(5)+"0000011")
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"000"+bin(contents[3])[2:].zfill(5)+"0000011")
     
     elif((linedata.split(" ")[0] == "lh")):
         contents = linedata.split(" ")
@@ -205,12 +221,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"001"+bin(contents[3])[2:].zfill(5)+"0000011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"001"+bin(contents[3])[2:].zfill(5)+"0000011")
         
     elif((linedata.split(" ")[0] == "lw")):
         contents = linedata.split(" ")
@@ -220,12 +236,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"010"+bin(contents[3])[2:].zfill(5)+"0000011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"010"+bin(contents[3])[2:].zfill(5)+"0000011")
         
     elif((linedata.split(" ")[0] == "lbu")):
         contents = linedata.split(" ")
@@ -235,12 +251,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"100"+bin(contents[3])[2:].zfill(5)+"0000011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"100"+bin(contents[3])[2:].zfill(5)+"0000011")
     
     elif((linedata.split(" ")[0] == "lhu")):
         contents = linedata.split(" ")
@@ -250,12 +266,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"101"+bin(contents[3])[2:].zfill(5)+"0000011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"101"+bin(contents[3])[2:].zfill(5)+"0000011")
     
     elif((linedata.split(" ")[0] == "addi")):
         contents = linedata.split(" ")
@@ -265,12 +281,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"000"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"000"+bin(contents[3])[2:].zfill(5)+"0010011")
     elif((linedata.split(" ")[0] == "slti")):
         contents = linedata.split(" ")
         imm = int(contents[1])
@@ -279,12 +295,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"010"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"010"+bin(contents[3])[2:].zfill(5)+"0010011")
 
     elif((linedata.split(" ")[0] == "sltiu")):
         contents = linedata.split(" ")
@@ -294,12 +310,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"011"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"011"+bin(contents[3])[2:].zfill(5)+"0010011")
 
     elif((linedata.split(" ")[0] == "xori")):
         contents = linedata.split(" ")
@@ -309,12 +325,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"100"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"100"+bin(contents[3])[2:].zfill(5)+"0010011")
 
     elif((linedata.split(" ")[0] == "ori")):
         contents = linedata.split(" ")
@@ -324,12 +340,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"110"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"110"+bin(contents[3])[2:].zfill(5)+"0010011")
 
     elif((linedata.split(" ")[0] == "andi")):
         contents = linedata.split(" ")
@@ -339,12 +355,12 @@ for line in f2:
         elif(imm > 2047):
             imm = 2047
         
-        if(imm > 0):
-            imm_b = "0"+bin(imm)[2:].zfill(11)
+        if(imm >= 0):
+            imm_i = "0"+bin(imm)[2:].zfill(11)
         else:
             imm_pos = imm+2048
-            imm_b = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_b+bin(contents[2])[2:].zfill(5)+"111"+bin(contents[3])[2:].zfill(5)+"0010011")
+            imm_i = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"111"+bin(contents[3])[2:].zfill(5)+"0010011")
 
     elif((linedata.split(" ")[0] == "add")):
         contents = linedata.split(" ")
