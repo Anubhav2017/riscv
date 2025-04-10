@@ -1,3 +1,4 @@
 vivado/
 riscv.vvp
-signals.vcd
+sim/*.vcd
+sim/obj_dir/

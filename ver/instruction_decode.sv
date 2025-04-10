@@ -297,7 +297,7 @@ always_comb begin
         update_pc = 1'b0;
 
         if(func3 == 3'b000) begin
-            if(func7 == 6'd32) begin ///subtract
+            if(func7 == 7'd32) begin ///subtract
 
                 result = $signed(operand1)-$signed(operand2);
 

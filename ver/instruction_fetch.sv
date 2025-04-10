@@ -30,7 +30,7 @@ end
 
 logic [31:0] pc_mem_addr;
 
-assign pc_mem_addr = {2'b0,pc>>2};
+assign pc_mem_addr = {pc>>2};// {2'b0,pc>>2};
 imem inst_imem(
     .addr(pc_mem_addr),
     .data(instruction)

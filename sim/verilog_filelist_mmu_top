@@ -1,0 +1,5 @@
+../sim/tb_mmu.sv
+../ver/mmu/mmu_top.sv
+../ver/mmu/direct_map_cache.sv
+../ver/mmu/my_axi_master_sim_model.sv
+../ver/mmu/sync_fifo.sv

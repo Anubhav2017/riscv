@@ -1,0 +1,7 @@
+../sim/tb_riscv_top.sv
+../ver/riscv_top.sv
+../ver/instruction_fetch.sv
+../ver/imem.sv
+../ver/data_mem.sv
+../ver/instruction_decode.sv
+../ver/write_back.sv

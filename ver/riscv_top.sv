@@ -1,9 +1,13 @@
 module riscv_top(
 
     input logic i_clk,
-    input logic i_rstn
+    input logic rst
 
 );
+/* verilator lint_off WIDTHTRUNC */
+logic i_rstn;
+
+assign i_rstn = ~rst;
 
 wire [31:0] instruction;
 logic [63:0] instruction_reg;
@@ -29,7 +33,7 @@ always @(posedge i_clk, negedge i_rstn) begin
 
 end
 
-wire [5:0] read_addr1, read_addr2, wraddr;
+wire [4:0] read_addr1, read_addr2, wraddr;
 wire [31:0] read_data1, read_data2, wrdata;
 wire wr_enable;
 
@@ -71,5 +75,13 @@ write_back u_write_back(
     .wrdata(wrdata)
 );
 
+`ifdef FPGA
+ila_wb inst_ila (
+	.clk(i_clk), // input wire clk
+	.probe0(pc), // input wire [31:0]  probe0  
+	.probe1(wraddr), // input wire [4:0]  probe1 
+	.probe2(wr_enable) // input wire [0:0]  probe2
+);
+`endif
 
 endmodule
