@@ -1,5 +1,5 @@
 
-f1 = open("../instruction_mem.txt","w")
+f1 = open("../ver/instruction_mem.txt","w")
 f2 = open("instruction_describe.txt","r")
 
 
@@ -241,7 +241,7 @@ for line in f2:
         else:
             imm_pos = imm+2048
             imm_i = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"010"+bin(contents[3])[2:].zfill(5)+"0000011")
+        f1.write(imm_i+bin(int(contents[2]))[2:].zfill(5)+"010"+bin(int(contents[3]))[2:].zfill(5)+"0000011"+'\n')
         
     elif((linedata.split(" ")[0] == "lbu")):
         contents = linedata.split(" ")

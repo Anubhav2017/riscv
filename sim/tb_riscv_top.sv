@@ -1,4 +1,4 @@
-`timescale 1 ns / 100 ps
+`timescale 1 ns / 1 ps
 `define D_D 10ps
 
 module tb_riscv_top();
@@ -36,7 +36,7 @@ initial begin
 
  
 
-    #1000 $finish;
+    #10000 $finish;
 
 end
 

@@ -87,7 +87,7 @@ instruction_decode u_id(
     .wb_reg(wb_reg),
     .new_pc(new_pc),
     .update_pc(update_pc),
-    .cpu_stall(cpu_stall),
+    .cpu_stall_final(cpu_stall),
 
     .mmu_wr_req(mmu_wr_req),
     .mmu_wr_req_reg(mmu_wr_req_reg),
