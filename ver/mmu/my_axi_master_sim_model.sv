@@ -32,7 +32,7 @@
 
 	    output logic [C_M_AXI_DATA_WIDTH-1:0] axi_rd_data[C_M_AXI_BURST_LEN],
         input wire axi_rd_rq,
-		output logic axi_rd_rq_ack,
+		//output logic axi_rd_rq_ack,
         input wire [C_M_AXI_ADDR_WIDTH-1:0] axi_rd_addr,
 		output axi_rd_valid,
 		input axi_rd_valid_ack,
@@ -160,50 +160,6 @@
 	logic axi_rd_rq_prev;
 	logic axi_wr_rq_prev;
 
-//    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
-//        if(!M_AXI_ARESETN) begin
-//            write_time_counter <= 11'd0;
-//
-//        end else begin
-//
-//            if(run_write_time_counter) begin
-//                write_time_counter <= write_time_counter+1;
-//            end else begin
-//                write_time_counter <= 11'd0;
-//            end
-//        end
-//    end
-//
-//	always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
-//
-//		if(!M_AXI_ARESETN) begin
-//			memory <= '{5000{32'd0}};
-//			run_write_time_counter <= 1'b0;
-//			axi_wr_done <= 1'b0;
-//
-//        end else begin
-//
-//            if(axi_wr_rq) begin
-//                run_write_time_counter <= 1'b1;
-//			end
-//
-//			if(run_write_time_counter) begin
-//
-//                if(write_time_counter == 11'd1000) begin
-//                    memory[axi_wr_addr] <= axi_wr_data[0];
-//                    run_write_time_counter <= 1'b0;
-//                    axi_wr_done <= 1'b1;
-//                end else begin
-//                    run_write_time_counter <= 1'b1;
-//					axi_wr_done <=1'b0;
-//
-//                end
-//			end
-//			
-//
-//
-//        end
-//    end
 
 	assign M_AXI_WSTRB = 4'hF;
 
@@ -302,7 +258,6 @@ generate
 				run_read_time_counter[gvar] <= 1'b0;
 				rd_addr_lat[gvar] <= 32'd0;
 				axi_rd_valid <= 1'b0; 
-				axi_rd_data[0] <= 32'd0;
 				axi_rd_valid_pre <= 1'b0;
 
 			end else begin
@@ -393,6 +348,78 @@ generate
 
 endgenerate
 
+logic fifo_full, fifo_empty;
+logic [31:0] fifo_wr_data, fifo_rd_data;
+logic push, pop;
+
+logic axi_rd_valid_ack_prev;
+
+sync_fifo inst_axi_sync_fifo(
+    .i_clk(M_AXI_ACLK),
+    .i_rstn(M_AXI_ARESETN),
+    .push(push),
+    .pop(pop),
+    .push_data(fifo_wr_data),
+    .pop_data(fifo_rd_data),
+    .fifo_empty(fifo_empty),
+    .fifo_full(fifo_full)
+);
+
+always_comb begin
+
+
+	if(|read_time_counter_timeout) begin
+	    fifo_wr_data = rd_addr_final;
+		push = 1'b1; 
+	end else begin
+		fifo_wr_data = 32'd0;
+		push = 1'b0;
+	end
+
+	if(~fifo_empty) begin
+		if(axi_rd_valid_ack & !axi_rd_valid_ack_prev)
+			pop = 1'b1;
+		else 
+			pop = 1'b0;
+	end else 
+		pop = 1'b0;
+
+end
+
+assign axi_rd_data[0] = fifo_rd_data;
+
+   always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
+
+       if(!M_AXI_ARESETN) begin
+		axi_rd_valid <= 1'b0; 
+		axi_rd_data[0] <= 32'd0;
+		axi_rd_valid_pre <= 1'b0;
+		read_tracker <= 4'd0;
+		axi_rd_rq_prev <= 1'b0;
+		//axi_rd_rq_ack <= 1'b0;
+       end else begin
+
+			axi_rd_valid_ack_prev <= axi_rd_valid_ack;
+
+			axi_rd_rq_prev <= axi_rd_rq;
+
+        	if(axi_rd_rq & !axi_rd_rq_prev) begin
+				//axi_rd_rq_ack <= 1'b1;
+				read_tracker <= read_tracker+1;
+			end
+
+
+			if(axi_rd_valid_ack & !axi_rd_valid_ack_prev)
+				axi_rd_valid <= 1'b0;
+			else begin
+				if(!fifo_empty)
+					axi_rd_valid <= 1'b1;
+			end
+
+       end
+   end
+
+
    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
 
        if(!M_AXI_ARESETN) begin
@@ -435,44 +462,4 @@ endgenerate
    end
 
 
-   always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
-
-       if(!M_AXI_ARESETN) begin
-		axi_rd_valid <= 1'b0; 
-		axi_rd_data[0] <= 32'd0;
-		axi_rd_valid_pre <= 1'b0;
-		read_tracker <= 4'd0;
-		axi_rd_rq_prev <= 1'b0;
-		axi_rd_rq_ack <= 1'b0;
-       end else begin
-
-			axi_rd_rq_prev <= axi_rd_rq;
-
-        	if(axi_rd_rq & !axi_rd_rq_prev) begin
-				axi_rd_rq_ack <= 1'b1;
-				read_tracker <= read_tracker+1;
-			end
-
-			if(!axi_rd_rq) 
-				axi_rd_rq_ack <= 1'b0;
-		
-			if(|read_time_counter_timeout) begin
-
-                axi_rd_data[0] <= memory[rd_addr_final]; 
-                axi_rd_valid_pre <= 1'b1; 
-
-			end else begin
-				axi_rd_valid_pre <=1'b0;
-			end
-
-			if(axi_rd_valid_pre) begin
-				axi_rd_valid <= 1'b1;
-			end else begin
-				if(axi_rd_valid_ack)
-					axi_rd_valid <= 1'b0;
-			end
-
-
-       end
-   end
 endmodule

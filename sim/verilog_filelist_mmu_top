@@ -3,3 +3,4 @@
 ../ver/mmu/direct_map_cache.sv
 ../ver/mmu/my_axi_master_sim_model.sv
 ../ver/mmu/sync_fifo.sv
+../ver/interfaces/axi_interface.sv

@@ -5,3 +5,8 @@
 ../ver/data_mem.sv
 ../ver/instruction_decode.sv
 ../ver/write_back.sv
+../ver/mmu/mmu_top.sv
+../ver/mmu/direct_map_cache.sv
+../ver/mmu/my_axi_master_sim_model.sv
+../ver/mmu/sync_fifo.sv
+../ver/interfaces/axi_interface.sv
