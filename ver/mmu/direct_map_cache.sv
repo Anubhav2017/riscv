@@ -118,7 +118,7 @@ end
 
 logic axi_rd_rq_pre; 
 
-assign axi_rd_rq = (~mmu_clk_sync2) & mmu_clk_sync1 & rd_req & !fifo_full;
+assign axi_rd_rq = (~mmu_clk_sync2) & mmu_clk_sync1 & rd_req & !fifo_full & !rd_hit;
 
 always @(posedge axi_clk)
     axi_rd_rq <= #(`D_D) axi_rd_rq_pre;
@@ -142,7 +142,7 @@ always @(posedge axi_clk)
 //end
 
 
-assign pop = axi_rd_valid_ack_prev & !axi_rd_valid_ack;
+assign pop = axi_rd_valid_ack;
 
 assign push = (rd_req & !rd_hit & !(fifo_full));
 
@@ -156,9 +156,9 @@ always @(posedge mmu_clk, negedge i_rstn) begin
         num_rd_pending <= 5'd0;
     end else begin
         if(push & !pop)
-            num_rd_pending <= num_rd_pending +1;
+            num_rd_pending <= #(`D_D) num_rd_pending +1;
         else if(pop & !push)
-            num_rd_pending <= num_rd_pending-1;
+            num_rd_pending <= #(`D_D) num_rd_pending-1;
     end 
 
 end

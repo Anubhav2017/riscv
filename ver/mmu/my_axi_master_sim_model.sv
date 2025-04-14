@@ -386,7 +386,7 @@ always_comb begin
 
 end
 
-assign axi_rd_data[0] = fifo_rd_data;
+assign axi_rd_data[0] = memory[fifo_rd_data];
 
    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
 
