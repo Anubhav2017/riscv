@@ -4,8 +4,7 @@ module mmu_top
     input wr_req,
     input logic [31:0] wr_data,
 	input logic [31:0] wr_addr,
-	input logic [4:0] wr_req_reg,
-	output logic [4:0] wr_done_reg,
+	input logic [2:0] wr_req_func3,
 	output logic wr_done,
 
     input rd_req,
@@ -30,14 +29,12 @@ logic axi_rd_rq;
 logic [31:0] axi_rd_addr;
 logic [31:0] axi_rd_data;
 logic axi_rd_valid;
+logic [31:0] axi_rd_valid_addr;
 logic axi_rd_valid_ack;
 
 logic axi_wr_rq;
-logic axi_wr_rq_ack;
 logic [31:0] axi_wr_data;
 logic [31:0] axi_wr_addr;
-logic axi_wr_done;
-logic axi_wr_done_ack;
 
 direct_map_cache inst_direct_map_cache(
     .mmu_clk(mmu_clk),
@@ -54,6 +51,7 @@ direct_map_cache inst_direct_map_cache(
 
 	.wr_data(wr_data),
     .wr_req(wr_req),
+	.wr_req_func3(wr_req_func3),
 	.wr_addr(wr_addr),
 	.wr_done(wr_done),
 
@@ -62,19 +60,14 @@ direct_map_cache inst_direct_map_cache(
 	.axi_rd_addr(axi_rd_addr),
     .axi_rd_data(axi_rd_data),
 	.axi_rd_valid(axi_rd_valid),
+	.axi_rd_valid_addr(axi_rd_valid_addr),
 	//.axi_rd_rq_ack(axi_rd_rq_ack),
 	.axi_rd_valid_ack(axi_rd_valid_ack),
 
     .axi_wr_rq(axi_wr_rq),
     .axi_wr_addr(axi_wr_addr),
-    .axi_wr_data(axi_wr_data),
-    .axi_wr_done(axi_wr_done),
-	.axi_wr_rq_ack(axi_wr_rq_ack),
-	.axi_wr_done_ack(axi_wr_done_ack),
+    .axi_wr_data(axi_wr_data)
 
-
-
-	.axi_id(axi_id)
 );
 
 
@@ -87,15 +80,12 @@ my_axi_master_sim_model # (
 	.axi_rd_addr(axi_rd_addr),
     .axi_rd_data({axi_rd_data}),
 	.axi_rd_valid(axi_rd_valid),
-	//.axi_rd_rq_ack(axi_rd_rq_ack),
+	.axi_rd_valid_addr(axi_rd_valid_addr),
 	.axi_rd_valid_ack(axi_rd_valid_ack),
 
     .axi_wr_rq(axi_wr_rq),
     .axi_wr_addr(axi_wr_addr),
     .axi_wr_data({axi_wr_data}),
-    .axi_wr_done(axi_wr_done),
-	.axi_wr_rq_ack(axi_wr_rq_ack),
-	.axi_wr_done_ack(axi_wr_done_ack),
 	
 	.M_AXI_ACLK(m_axi_intf.m_axi_aclk),
 	.M_AXI_ARESETN(m_axi_intf.m_axi_aresetn),

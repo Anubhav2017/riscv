@@ -24,17 +24,16 @@
 	(
 		// Initiate AXI transactions
 		input wire  axi_wr_rq,
-		output logic axi_wr_rq_ack,
         input wire [C_M_AXI_ADDR_WIDTH-1:0] axi_wr_addr,
 		input logic [C_M_AXI_DATA_WIDTH-1:0] axi_wr_data[C_M_AXI_BURST_LEN],
-		output logic axi_wr_done,
-		input axi_wr_done_ack,
 
 	    output logic [C_M_AXI_DATA_WIDTH-1:0] axi_rd_data[C_M_AXI_BURST_LEN],
         input wire axi_rd_rq,
 		//output logic axi_rd_rq_ack,
         input wire [C_M_AXI_ADDR_WIDTH-1:0] axi_rd_addr,
 		output axi_rd_valid,
+		output logic [C_M_AXI_ADDR_WIDTH-1:0] axi_rd_valid_addr,
+
 		input axi_rd_valid_ack,
 		
         // Global Clock Signal.
@@ -318,8 +317,6 @@ generate
 				run_write_time_counter[gvar] <= 1'b0;
 				wr_addr_lat[gvar] <= 32'd0;
 				wr_data_lat[gvar] <= 32'd0;
-				axi_wr_done <= 1'b0; 
-				axi_wr_done_pre <= 1'b0;
 
 			end else begin
 
@@ -387,6 +384,7 @@ always_comb begin
 end
 
 assign axi_rd_data[0] = memory[fifo_rd_data];
+assign axi_rd_valid_addr = fifo_rd_data;
 
    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
 
@@ -423,39 +421,24 @@ assign axi_rd_data[0] = memory[fifo_rd_data];
    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
 
        if(!M_AXI_ARESETN) begin
-		axi_wr_done <= 1'b0; 
-		axi_wr_done_pre <= 1'b0;
 		write_tracker <= 4'd0;
 		axi_wr_rq_prev <= 1'b0;
-		axi_wr_rq_ack <= 1'b0;
 
        end else begin
 
 			axi_wr_rq_prev <= axi_wr_rq;
 
         	if(axi_wr_rq & !axi_wr_rq_prev) begin
-				axi_wr_rq_ack <= 1'b1;
 				write_tracker <= write_tracker+1;
 			end
 
-			if(!axi_wr_rq) 
-				axi_wr_rq_ack <= 1'b0;
 		
 			if(|write_time_counter_timeout) begin
 
                 memory[wr_addr_final] <= wr_data_final; 
-                axi_wr_done_pre <= 1'b1; 
 
-			end else begin
-				axi_wr_done_pre <=1'b0;
 			end
 
-			if(axi_wr_done_pre) begin
-				axi_wr_done <= 1'b1;
-			end else begin
-				if(axi_wr_done_ack)
-					axi_wr_done <= 1'b0;
-			end
 
 
        end

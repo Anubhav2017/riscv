@@ -67,8 +67,7 @@ mmu_top inst_mmu_top(
 	.wr_addr(),
 	.wr_done(),
 	.wr_req(1'b0),
-	.wr_req_reg(5'd0),
-	.wr_done_reg(),
+	.wr_req_func3(3'd0),
 	.wr_data('d0),
 	.m_axi_intf(axi_intf)
 );
