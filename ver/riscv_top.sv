@@ -17,7 +17,7 @@ logic [31:0] pc, new_pc;
 logic update_pc;
 
 logic mmu_wr_req;
-logic [4:0] mmu_wr_req_reg;
+logic [2:0] mmu_wr_req_func3;
 logic [31:0] mmu_wr_data;
 logic [31:0] mmu_wr_addr;
 logic mmu_wr_done;
@@ -90,11 +90,10 @@ instruction_decode u_id(
     .cpu_stall_final(cpu_stall),
 
     .mmu_wr_req(mmu_wr_req),
-    .mmu_wr_req_reg(mmu_wr_req_reg),
+    .mmu_wr_req_func3(mmu_wr_req_func3),
     .mmu_wr_data(mmu_wr_data),
     .mmu_wr_addr(mmu_wr_addr),
     .mmu_wr_done(mmu_wr_done),
-    .mmu_wr_done_reg(mmu_wr_done_reg),
 
     .mmu_rd_req_reg(mmu_rd_req_reg),
     .mmu_rd_req_func3(mmu_rd_req_func3),
@@ -124,11 +123,10 @@ mmu_top inst_mmu_top(
     .m_axi_intf(m_axi_intf),
     
     .wr_req(mmu_wr_req),
+    .wr_req_func3(mmu_wr_req_func3),
     .wr_data(mmu_wr_data),
 	.wr_addr(mmu_wr_addr),
 	.wr_done(mmu_wr_done),
-    .wr_req_reg(mmu_wr_req_reg),
-    .wr_done_reg(mmu_wr_done_reg),
 
     .rd_req(mmu_rd_req),
     .rd_addr(mmu_rd_addr),

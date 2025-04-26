@@ -13,11 +13,10 @@ module instruction_decode(
     output logic cpu_stall_final,
 
     output mmu_wr_req,
-    output logic [4:0] mmu_wr_req_reg,
     output logic [31:0] mmu_wr_data,
     output logic [31:0] mmu_wr_addr,
+    output logic [2:0] mmu_wr_req_func3,
 	input logic mmu_wr_done,
-    input logic [4:0] mmu_wr_done_reg,
 
     output mmu_rd_req,
     output logic [4:0] mmu_rd_req_reg,
@@ -55,6 +54,7 @@ logic [31:0] imm_b;
 logic [31:0] imm_i;
 logic [31:0] imm_u;
 logic [31:0] imm_j;
+logic [31:0] imm_s;
 
 logic write_bit;
 
@@ -74,6 +74,7 @@ assign imm_b = {{19{instruction_reg[31]}},instruction_reg[31],instruction_reg[7]
 assign imm_u = {instruction_reg[31:12],12'd0};
 assign imm_i = {{20{instruction_reg[31]}},instruction_reg[31:20]};
 assign imm_j = {{12{instruction_reg[31]}},instruction_reg[19:12],instruction_reg[20],instruction_reg[30:21],1'b0};
+assign imm_s = {{20{instruction_reg[31]}},instruction_reg[31:25],instruction_reg[11:7]};
 
 logic hash_table [32];
 logic cpu_stall_ext, cpu_stall;
@@ -92,11 +93,17 @@ always_comb begin
     operand1 = 32'd0;
     operand2 = 32'd0;
     write_bit = 1'b0;
+
     mmu_rd_req = 1'b0;
     mmu_rd_addr = 32'd0;
     mmu_rd_req_reg = 5'd0;
     mmu_rd_req_func3 = 3'd0;
+
     mmu_wr_addr = 32'd0;
+    mmu_wr_data = 32'd0;
+    mmu_wr_req = 1'b0;
+    mmu_wr_req_func3 = 3'd0;
+
     cpu_stall= 1'b0;
 
     if(mmu_rd_valid) begin
@@ -295,6 +302,66 @@ always_comb begin
                     mmu_rd_addr = 32'd0;
                     mmu_rd_req_reg = 5'd0;
                     mmu_rd_req = 1'b0;
+
+                end
+
+            endcase
+
+        end
+
+    end else if(opcode == 7'b0100011) begin //S-Type
+
+        if((hash_table[rs1]==1'b1) | (hash_table[rs2]==1'b1)) begin
+            cpu_stall = 1'b1;
+        end
+        
+        if((rs1 == wb_reg[36:32]) && (wb_reg[37]==1'b1)) begin /////data forwarding
+            operand1 = wb_reg[31:0];
+        end else begin
+            operand1 = read_data1;
+        end
+
+        if(rs2 == wb_reg[36:32] && (wb_reg[37] == 1'b1)) begin
+            operand2 = wb_reg[31:0];
+        end else begin
+            operand2 = read_data2;
+        end
+
+        if(!stall) begin
+
+            case(func3)
+
+                3'b000: begin ///sb
+                    mmu_wr_addr = operand1 + $signed(imm_s);
+                    mmu_wr_req = 1'b1;
+                    mmu_wr_req_func3 = 3'b000;
+                    mmu_wr_data = operand2;
+
+                end
+
+                3'b001: begin ///sh
+
+                    mmu_wr_addr = operand1 + $signed(imm_s);
+                    mmu_wr_req = 1'b1;
+                    mmu_wr_req_func3 = 3'b001;
+                    mmu_wr_data = operand2;
+
+                end
+
+                3'b010: begin  ///sw
+
+                    mmu_wr_addr = operand1 + $signed(imm_s);
+                    mmu_wr_req = 1'b1;
+                    mmu_wr_req_func3 = 3'b010;
+                    mmu_wr_data = operand2;
+                end
+
+
+                default: begin
+                    mmu_wr_addr = 32'd0;
+                    mmu_wr_req = 1'b0;
+                    mmu_wr_req_func3 = 3'd0;
+                    mmu_wr_data = 32'd0;
 
                 end
 

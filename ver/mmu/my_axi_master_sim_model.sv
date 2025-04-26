@@ -1,9 +1,11 @@
-
-	module my_axi_master_sim_model #
+module my_axi_master_sim_model #
 	(
 
+    	parameter WORD_SIZE = 4,
+    	parameter NUM_WORDS_IN_BLOCK = 4,
+    	parameter BLOCK_SIZE = NUM_WORDS_IN_BLOCK*WORD_SIZE, //in bytes
 		// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-		parameter C_M_AXI_BURST_LEN	= 16,
+		parameter C_M_AXI_BURST_LEN	= NUM_WORDS_IN_BLOCK,
 		// Thread ID Width
 		parameter integer C_M_AXI_ID_WIDTH	= 1,
 		// Width of Address Bus
@@ -25,9 +27,9 @@
 		// Initiate AXI transactions
 		input wire  axi_wr_rq,
         input wire [C_M_AXI_ADDR_WIDTH-1:0] axi_wr_addr,
-		input logic [C_M_AXI_DATA_WIDTH-1:0] axi_wr_data[C_M_AXI_BURST_LEN],
+		input logic [C_M_AXI_BURST_LEN-1:0][C_M_AXI_DATA_WIDTH-1:0] axi_wr_data,
 
-	    output logic [C_M_AXI_DATA_WIDTH-1:0] axi_rd_data[C_M_AXI_BURST_LEN],
+	    output logic [C_M_AXI_BURST_LEN-1:0][C_M_AXI_DATA_WIDTH-1:0] axi_rd_data,
         input wire axi_rd_rq,
 		//output logic axi_rd_rq_ack,
         input wire [C_M_AXI_ADDR_WIDTH-1:0] axi_rd_addr,
@@ -153,7 +155,6 @@
 
 
     logic [31:0] memory [5000];
-	logic axi_rd_valid_pre;
 	logic axi_wr_done_pre;
 
 	logic axi_rd_rq_prev;
@@ -197,26 +198,26 @@ logic [3:0] write_tracker;
 logic [10:0] write_time_counter[16];
 logic run_write_time_counter[16];
 logic [31:0] wr_addr_lat[16];
-logic [31:0] wr_data_lat[16];
+logic [31:0] wr_data_lat[16][NUM_WORDS_IN_BLOCK+1];
 
 logic [31:0] wr_addr_pre_final [16];
-logic [31:0] wr_data_pre_final [16];
+logic [31:0] wr_data_pre_final [16][NUM_WORDS_IN_BLOCK+1];
 logic [31:0] wr_addr_final;
-logic [31:0] wr_data_final;
+logic [31:0] wr_data_final[NUM_WORDS_IN_BLOCK+1];
 logic [15:0] write_time_counter_timeout;
 always_comb begin
 	rd_addr_final = 32'd0;
 	wr_addr_final = 32'd0;
-	wr_data_final = 32'd0;
+	wr_data_final = '{NUM_WORDS_IN_BLOCK+1{'{32{1'b0}}}};
 	for(int j=0; j<16; j++) begin
 		if(rd_addr_pre_final[j] != 32'd0)
 			rd_addr_final = rd_addr_pre_final[j];
 		
-		if(wr_addr_pre_final[j] != 32'd0)
+		if(wr_addr_pre_final[j] != 32'd0) begin
 			wr_addr_final = wr_addr_pre_final[j];
-		
-		if(wr_data_pre_final[j] != 32'd0)
 			wr_data_final = wr_data_pre_final[j];
+		end
+		
 	end
 end
 
@@ -257,7 +258,6 @@ generate
 				run_read_time_counter[gvar] <= 1'b0;
 				rd_addr_lat[gvar] <= 32'd0;
 				axi_rd_valid <= 1'b0; 
-				axi_rd_valid_pre <= 1'b0;
 
 			end else begin
 
@@ -306,7 +306,7 @@ generate
 			end else begin
 				write_time_counter_timeout[gvar] = 1'b0;
 				wr_addr_pre_final[gvar] = 32'd0;
-				wr_data_pre_final[gvar] = 32'd0;
+				wr_data_pre_final[gvar] = '{NUM_WORDS_IN_BLOCK+1{'{32{1'b0}}}};
 			end
 		end
 
@@ -316,14 +316,17 @@ generate
 			if(!M_AXI_ARESETN) begin
 				run_write_time_counter[gvar] <= 1'b0;
 				wr_addr_lat[gvar] <= 32'd0;
-				wr_data_lat[gvar] <= 32'd0;
+				wr_data_lat[gvar] <= '{NUM_WORDS_IN_BLOCK+1{32'd0}};
 
 			end else begin
 
 				if(axi_wr_rq & !axi_wr_rq_prev) begin
 					if(gvar == write_tracker) begin
 						run_write_time_counter[gvar] <= 1'b1;
-						wr_addr_lat[gvar] <= axi_wr_addr; 
+						wr_addr_lat[gvar] <= axi_wr_addr;
+						for(int k=0;k<NUM_WORDS_IN_BLOCK+1;k++) begin
+							wr_data_lat[gvar][k] <= axi_wr_data[k];
+						end
 					end
 				end
 
@@ -382,16 +385,22 @@ always_comb begin
 		pop = 1'b0;
 
 end
+genvar i;
+generate begin
+	for(i=0; i<NUM_WORDS_IN_BLOCK;i=i+1) begin
+		assign axi_rd_data[i] = memory[fifo_rd_data+i];
+	end
+end
+ 
+endgenerate
 
-assign axi_rd_data[0] = memory[fifo_rd_data];
+
 assign axi_rd_valid_addr = fifo_rd_data;
 
    always @(posedge M_AXI_ACLK, negedge M_AXI_ARESETN) begin
 
        if(!M_AXI_ARESETN) begin
 		axi_rd_valid <= 1'b0; 
-		axi_rd_data[0] <= 32'd0;
-		axi_rd_valid_pre <= 1'b0;
 		read_tracker <= 4'd0;
 		axi_rd_rq_prev <= 1'b0;
 		//axi_rd_rq_ack <= 1'b0;
@@ -434,8 +443,8 @@ assign axi_rd_valid_addr = fifo_rd_data;
 
 		
 			if(|write_time_counter_timeout) begin
-
-                memory[wr_addr_final] <= wr_data_final; 
+				for(int k=0;k<NUM_WORDS_IN_BLOCK+1;k++)
+                	memory[wr_addr_final+k*4] <= wr_data_final[k]; 
 
 			end
 

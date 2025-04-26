@@ -256,7 +256,7 @@ for line in f2:
         else:
             imm_pos = imm+2048
             imm_i = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"100"+bin(contents[3])[2:].zfill(5)+"0000011")
+        f1.write(imm_i+bin(int(contents[2]))[2:].zfill(5)+"100"+bin(int(contents[3]))[2:].zfill(5)+"0000011"+'\n')
     
     elif((linedata.split(" ")[0] == "lhu")):
         contents = linedata.split(" ")
@@ -271,8 +271,53 @@ for line in f2:
         else:
             imm_pos = imm+2048
             imm_i = "1"+bin(imm_pos)[2:].zfill(11)
-        f1.write(imm_i+bin(contents[2])[2:].zfill(5)+"101"+bin(contents[3])[2:].zfill(5)+"0000011")
+        f1.write(imm_i+bin(int(contents[2]))[2:].zfill(5)+"101"+bin(int(contents[3]))[2:].zfill(5)+"0000011"+'\n')
     
+    elif((linedata.split(" ")[0] == "sb")):
+        contents = linedata.split(" ")
+        imm = int(contents[1])
+        if(imm < -2048):
+            imm = -2048
+        elif(imm > 2047):
+            imm = 2047
+        
+        if(imm >= 0):
+            imm_s = "0"+bin(imm)[2:].zfill(11)
+        else:
+            imm_pos = imm+2048
+            imm_s = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_s[0:7]+bin(contents[2])[2:].zfill(5)+bin(contents[3])[2:].zfill(5)+"000"+imm_s[7:12]+"0100011"+'\n')
+    
+    elif((linedata.split(" ")[0] == "sh")):
+        contents = linedata.split(" ")
+        imm = int(contents[1])
+        if(imm < -2048):
+            imm = -2048
+        elif(imm > 2047):
+            imm = 2047
+        
+        if(imm >= 0):
+            imm_s = "0"+bin(imm)[2:].zfill(11)
+        else:
+            imm_pos = imm+2048
+            imm_s = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_s[0:7]+bin(contents[2])[2:].zfill(5)+bin(contents[3])[2:].zfill(5)+"001"+imm_s[7:12]+"0100011"+'\n')
+    
+    elif((linedata.split(" ")[0] == "sw")):
+        contents = linedata.split(" ")
+        imm = int(contents[1])
+        if(imm < -2048):
+            imm = -2048
+        elif(imm > 2047):
+            imm = 2047
+        
+        if(imm >= 0):
+            imm_s = "0"+bin(imm)[2:].zfill(11)
+        else:
+            imm_pos = imm+2048
+            imm_s = "1"+bin(imm_pos)[2:].zfill(11)
+        f1.write(imm_s[0:7]+bin(int(contents[2]))[2:].zfill(5)+bin(int(contents[3]))[2:].zfill(5)+"010"+imm_s[7:12]+"0100011"+'\n')
+
     elif((linedata.split(" ")[0] == "addi")):
         contents = linedata.split(" ")
         imm = int(contents[1])

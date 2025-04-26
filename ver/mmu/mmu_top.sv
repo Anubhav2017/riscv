@@ -1,5 +1,8 @@
-module mmu_top
-(
+module mmu_top #(
+    	parameter WORD_SIZE = 4,
+    	parameter NUM_WORDS_IN_BLOCK = 4,
+    	parameter BLOCK_SIZE = NUM_WORDS_IN_BLOCK*WORD_SIZE //in bytes
+)(
 
     input wr_req,
     input logic [31:0] wr_data,
@@ -27,16 +30,21 @@ logic axi_id;
 logic axi_rd_rq;
 //logic axi_rd_rq_ack;
 logic [31:0] axi_rd_addr;
-logic [31:0] axi_rd_data;
+logic [NUM_WORDS_IN_BLOCK-1:0][31:0] axi_rd_data;
+
 logic axi_rd_valid;
 logic [31:0] axi_rd_valid_addr;
 logic axi_rd_valid_ack;
 
 logic axi_wr_rq;
-logic [31:0] axi_wr_data;
+logic [NUM_WORDS_IN_BLOCK-1:0][31:0] axi_wr_data;
+
 logic [31:0] axi_wr_addr;
 
-direct_map_cache inst_direct_map_cache(
+
+direct_map_cache  #(	
+	.NUM_WORDS_IN_BLOCK(NUM_WORDS_IN_BLOCK)
+) inst_direct_map_cache (
     .mmu_clk(mmu_clk),
 	.axi_clk(m_axi_intf.m_axi_aclk),
     .i_rstn(i_rstn),
@@ -74,18 +82,18 @@ direct_map_cache inst_direct_map_cache(
 
 
 my_axi_master_sim_model # ( 
-	.C_M_AXI_BURST_LEN(1)
+	.NUM_WORDS_IN_BLOCK(NUM_WORDS_IN_BLOCK)
 ) my_axi_master_inst (
     .axi_rd_rq(axi_rd_rq),
 	.axi_rd_addr(axi_rd_addr),
-    .axi_rd_data({axi_rd_data}),
+    .axi_rd_data(axi_rd_data),
 	.axi_rd_valid(axi_rd_valid),
 	.axi_rd_valid_addr(axi_rd_valid_addr),
 	.axi_rd_valid_ack(axi_rd_valid_ack),
 
     .axi_wr_rq(axi_wr_rq),
     .axi_wr_addr(axi_wr_addr),
-    .axi_wr_data({axi_wr_data}),
+    .axi_wr_data(axi_wr_data),
 	
 	.M_AXI_ACLK(m_axi_intf.m_axi_aclk),
 	.M_AXI_ARESETN(m_axi_intf.m_axi_aresetn),
