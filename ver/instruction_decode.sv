@@ -1,7 +1,7 @@
 module instruction_decode(
     input cpu_clk_aon,
     input i_rstn,
-    input wire [63:0] instruction_reg,
+    input wire [64:0] instruction_reg,
 
     output logic [4:0] read_addr1, read_addr2,
     input [31:0] read_data1, read_data2,
@@ -38,7 +38,10 @@ module instruction_decode(
 
 wire [6:0] opcode;
 logic [31:0] current_pc;
+logic instruction_valid;
 
+
+assign instruction_valid = instruction_reg[64];
 assign current_pc = instruction_reg[63:32];
 assign opcode = instruction_reg[6:0];
 
@@ -58,7 +61,6 @@ logic [31:0] imm_s;
 
 logic write_bit;
 
-logic stall;
 
 assign read_addr1 = rs1;
 assign read_addr2 = rs2;
@@ -114,21 +116,21 @@ always_comb begin
 
         result = imm_u;
         
-        if (!stall) 
+        if (instruction_valid) 
             write_bit = 1'b1;
 
     end else if(opcode == 7'b0010111) begin //auipc
 
         result = current_pc + imm_u;
 
-        if (!stall) 
+        if (instruction_valid) 
             write_bit = 1'b1;
 
     end else if(opcode == 7'b1101111) begin //jal
 
         result = current_pc + 4;
         
-        if(!stall) begin
+        if(instruction_valid) begin
             new_pc = current_pc+imm_j;
             update_pc = 1'b1;
             write_bit = 1'b1; 
@@ -150,7 +152,7 @@ always_comb begin
 
         result = current_pc+4; 
 
-        if(!stall) begin
+        if(instruction_valid) begin
             write_bit = 1'b1;
             update_pc = 1'b1;
             new_pc = operand1+imm_i;
@@ -176,7 +178,7 @@ always_comb begin
             operand2 = read_data2;
         end
 
-        if(!stall) begin
+        if(instruction_valid) begin
 
             case(func3)
 
@@ -250,7 +252,7 @@ always_comb begin
             operand2 = read_data2;
         end
 
-        if(!stall) begin
+        if(instruction_valid) begin
 
             case(func3)
 
@@ -327,7 +329,7 @@ always_comb begin
             operand2 = read_data2;
         end
 
-        if(!stall) begin
+        if(instruction_valid) begin
 
             case(func3)
 
@@ -377,7 +379,7 @@ always_comb begin
             cpu_stall = 1'b1;
         end 
         
-        if(stall == 1'b1)
+        if(instruction_valid == 1'b0)
             write_bit = 1'b0;
         else 
             write_bit = 1'b1;
@@ -440,7 +442,7 @@ always_comb begin
             cpu_stall = 1'b1;
         end
 
-        if(stall == 1'b1)
+        if(instruction_valid == 1'b0)
             write_bit = 1'b0;
         else 
             write_bit = 1'b1;
@@ -524,7 +526,6 @@ always @(posedge cpu_clk_aon, negedge i_rstn) begin
     if(!i_rstn) begin
 
         wb_reg <= 38'd0;
-        stall <= 1'b0;
 
     end else begin
         if(cpu_stall == 1'b1) begin
@@ -546,10 +547,6 @@ always @(posedge cpu_clk_aon, negedge i_rstn) begin
 
         end else begin
             wb_reg <= {write_bit,rd,result};
-            if(update_pc)
-                stall <= 1'b1;
-            else
-                stall <= 1'b0;
         end
     end
 

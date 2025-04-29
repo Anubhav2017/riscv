@@ -43,7 +43,8 @@ end
 
 riscv_top inst_riscv(
     .cpu_clk_aon(cpu_clk_aon),
-    .m_axi_intf(axi_intf),
+    .m_axi_intf_data(axi_intf),
+    .m_axi_intf_instruction(axi_intf),
     .rst(rst)
 );
 

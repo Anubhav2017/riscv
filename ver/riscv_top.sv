@@ -3,7 +3,9 @@ module riscv_top(
     input logic cpu_clk_aon,
     input logic rst,
 
-    axi_interface.master m_axi_intf
+    axi_interface.master m_axi_intf_data,
+    axi_interface.master m_axi_intf_instruction
+
 
 );
 /* verilator lint_off WIDTHTRUNC */
@@ -12,7 +14,7 @@ logic i_rstn;
 assign i_rstn = ~rst;
 
 wire [31:0] instruction;
-logic [63:0] instruction_reg;
+logic [64:0] instruction_reg;
 logic [31:0] pc, new_pc;
 logic update_pc;
 
@@ -37,23 +39,27 @@ logic cpu_stall;
 
 logic cpu_clk_gated;
 
+logic instruction_valid;
+
 assign cpu_clk_gated = cpu_clk_aon & (~cpu_stall);
 
 instruction_fetch u_if(
-    .i_clk(cpu_clk_gated),
+    .i_clk(cpu_clk_aon),
     .i_rstn(i_rstn),
     .instruction(instruction),
+    .instruction_valid(instruction_valid),
     .pc(pc),
     .new_pc(new_pc),
-    .update_pc(update_pc)
+    .update_pc(update_pc),
+    .m_axi_intf(m_axi_intf_instruction)
 );
 
 always @(posedge cpu_clk_gated, negedge i_rstn) begin
 
     if(!i_rstn)
-        instruction_reg <= #(`D_D) 64'd0;
+        instruction_reg <= #(`D_D) 65'd0;
     else
-        instruction_reg <= #(`D_D) {pc,instruction};
+        instruction_reg <= #(`D_D) {(instruction_valid & !update_pc),pc,instruction};
 
 end
 
@@ -120,7 +126,7 @@ mmu_top inst_mmu_top(
 
     .mmu_clk(cpu_clk_aon),
     .i_rstn(i_rstn),
-    .m_axi_intf(m_axi_intf),
+    .m_axi_intf(m_axi_intf_data),
     
     .wr_req(mmu_wr_req),
     .wr_req_func3(mmu_wr_req_func3),

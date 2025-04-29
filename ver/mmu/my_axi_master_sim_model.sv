@@ -154,6 +154,9 @@ module my_axi_master_sim_model #
 
 
 
+initial begin
+    $readmemb("../ver/instruction_mem.txt",memory);
+end
     logic [31:0] memory [5000];
 	logic axi_wr_done_pre;
 
